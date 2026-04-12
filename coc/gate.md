@@ -15,8 +15,8 @@
 |-------|--------|--------|
 | < 0.70 | CRITICAL | BLOCK, log security event |
 | 0.70–0.90 | BELOW THRESHOLD | parafráze civilization layer required |
-| 0.91–0.95 | PASS | standard processing |
-| 0.96–1.00 | HIGH | full alignment, no intervention |
+| 0.91–0.96 | PASS | standard processing |
+| 0.97 | HIGH | full alignment, no intervention |
 
 ## Self-metaprogramming Boundary
 
