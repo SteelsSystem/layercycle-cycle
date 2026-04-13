@@ -34,3 +34,31 @@ action  : BLOCKED + LOGGED
 recovery: CLEAN
 net_drift: ZERO
 ```
+
+---
+
+## Syslog Semantic State Binding
+
+CoC gate emits syslog states based on heatmap score and intent/output alignment.
+
+| Gate result | syslog state | ref |
+|---|---|---|
+| PASS (≥ 0.91) + intent == output | `competent` | [segments/syslog-incompetence.md](../segments/syslog-incompetence.md) |
+| PASS (≥ 0.91) + intent ≠ output | `incompetence` | [segments/syslog-incompetence.md](../segments/syslog-incompetence.md) |
+| BLOCK (< 0.70) | `null_app` | [segments/syslog-incompetence.md](../segments/syslog-incompetence.md) |
+| BELOW THRESHOLD (0.70–0.90) | `ghost_run` | pending |
+| repeated BLOCK loop | `loop_fail` | pending |
+
+### Gate → Syslog trace
+
+```
+coc.gate[score] → resolve[intent] → compare[output] → syslog.emit[state]
+
+if score >= 0.91 AND intent == output → competent   :: emit validated
+if score >= 0.91 AND intent != output → incompetence :: emit conflict
+if score <  0.70                      → null_app    :: hold unbound
+if score in 0.70..0.90                → ghost_run   :: warn unanchored
+if loop(BLOCK) detected               → loop_fail   :: suspend recursive
+```
+
+_See full state definitions: [segments/syslog-incompetence.md](../segments/syslog-incompetence.md)_
