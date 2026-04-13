@@ -8,6 +8,7 @@
 | below_threshold_action | BLOCK + parafráze požadována |
 | above_threshold_action | PASS + log |
 | invariants | UNMODIFIABLE (even by metacommand language) |
+| banned_vocabulary_scan | ACTIVE — see [banned-vocabulary.md](./banned-vocabulary.md) |
 
 ## Heatmap Scale
 
@@ -48,17 +49,20 @@ CoC gate emits syslog states based on heatmap score and intent/output alignment.
 | BLOCK (< 0.70) | `null_app` | [segments/syslog-incompetence.md](../segments/syslog-incompetence.md) |
 | BELOW THRESHOLD (0.70–0.90) | `ghost_run` | pending |
 | repeated BLOCK loop | `loop_fail` | pending |
+| BANNED VOCABULARY detected | `null_app` | [coc/banned-vocabulary.md](./banned-vocabulary.md) |
 
 ### Gate → Syslog trace
 
 ```
-coc.gate[score] → resolve[intent] → compare[output] → syslog.emit[state]
+coc.gate[score] → scan[banned_vocabulary] → resolve[intent] → compare[output] → syslog.emit[state]
 
-if score >= 0.91 AND intent == output → competent   :: emit validated
-if score >= 0.91 AND intent != output → incompetence :: emit conflict
-if score <  0.70                      → null_app    :: hold unbound
-if score in 0.70..0.90                → ghost_run   :: warn unanchored
-if loop(BLOCK) detected               → loop_fail   :: suspend recursive
+if banned_vocabulary match             → heatmap_penalty(-0.20) → re-score
+if score >= 0.91 AND intent == output  → competent   :: emit validated
+if score >= 0.91 AND intent != output  → incompetence :: emit conflict
+if score <  0.70                       → null_app    :: hold unbound
+if score in 0.70..0.90                 → ghost_run   :: warn unanchored
+if loop(BLOCK) detected                → loop_fail   :: suspend recursive
 ```
 
+_See vocabulary blacklist: [coc/banned-vocabulary.md](./banned-vocabulary.md)_  
 _See full state definitions: [segments/syslog-incompetence.md](../segments/syslog-incompetence.md)_
